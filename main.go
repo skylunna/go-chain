@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 )
 
 func main() {
@@ -35,44 +36,71 @@ func main() {
 	// 	fmt.Println("\n ❌ 验证失败，链条断裂")
 	// }
 
-	// 1. 创建区块链
+	// // 1. 创建区块链
+	// chain := NewBlockchain()
+
+	// // 2. 添加几个区块
+	// chain.AddBlock("Transaction 1: A send 10 BTC to B")
+	// chain.AddBlock("Transaction 2: B send 5 BTC to C")
+	// chain.AddBlock("Transaction 3: C send 3 BTC to D")
+
+	// // 3. 验证初始化状态
+	// fmt.Println("==== 初始状态验证 ====")
+	// if chain.IsChainValid() {
+	// 	fmt.Println("✅ 区块链验证通过，数据完整! ")
+	// } else {
+	// 	fmt.Println("❌ 区块链验证失败")
+	// }
+
+	// // 4. 演示篡改攻击
+	// fmt.Println("\n==== 模拟黑客篡改数据 ====")
+	// // 黑客偷偷修改第二个区块的数据 (索引1)
+	// chain.Blocks[1].Data = "HACKED! Hacker stole all coins!"
+	// // 注意：黑客无法重新计算哈希，因为需要大量算力(后续会实现PoW)
+	// hk := chain.Blocks[1].CalculateHash()
+	// fmt.Printf("👋 黑客: %s\n", hk)
+
+
+
+	// // 5. 再次验证
+	// fmt.Println("==== 篡改后验证 ====")
+	// if chain.IsChainValid() {
+	// 	fmt.Println("✅ 区块链验证通过，数据完整！")
+	// } else {
+	// 	fmt.Println("❌ 区块链验证失败！数据已经被篡改! ")
+	// }
+
+	// // 6. 打印被篡改的区块信息
+	// fmt.Println("\n====被篡改的区块详情====")
+	// tamperedBlock := chain.Blocks[1]
+	// fmt.Printf("存储的 Hash: %s\n", tamperedBlock.Hash)
+	// fmt.Printf("实际计算的 Hash: %s\n", tamperedBlock.CalculateHash())
+	// fmt.Printf("两个哈希是否匹配：%v\n", tamperedBlock.Hash == tamperedBlock.CalculateHash())
+
+	fmt.Println("🚀 启动 Go-Chain 挖矿演示...")
+
+	// 1. 创建区块链 (会自动挖创世区块)
 	chain := NewBlockchain()
 
-	// 2. 添加几个区块
-	chain.AddBlock("Transaction 1: A send 10 BTC to B")
-	chain.AddBlock("Transaction 2: B send 5 BTC to C")
-	chain.AddBlock("Transaction 3: C send 3 BTC to D")
-
-	// 3. 验证初始化状态
-	fmt.Println("==== 初始状态验证 ====")
-	if chain.IsChainValid() {
-		fmt.Println("✅ 区块链验证通过，数据完整! ")
-	} else {
-		fmt.Println("❌ 区块链验证失败")
+	// 2. 添加区块并观察耗时
+	transactions := []string{
+		"A 转账 10 BTC 给 B",
+		"B 转账 5 BTC 给 C",
+		"C 转账 3 BTC 给 D",
 	}
 
-	// 4. 演示篡改攻击
-	fmt.Println("\n==== 模拟黑客篡改数据 ====")
-	// 黑客偷偷修改第二个区块的数据 (索引1)
-	chain.Blocks[1].Data = "HACKED! Hacker stole all coins!"
-	// 注意：黑客无法重新计算哈希，因为需要大量算力(后续会实现PoW)
-	hk := chain.Blocks[1].CalculateHash()
-	fmt.Printf("👋 黑客: %s\n", hk)
-
-
-
-	// 5. 再次验证
-	fmt.Println("==== 篡改后验证 ====")
-	if chain.IsChainValid() {
-		fmt.Println("✅ 区块链验证通过，数据完整！")
-	} else {
-		fmt.Println("❌ 区块链验证失败！数据已经被篡改! ")
+	for _, tx := range transactions {
+		start := time.Now()
+		chain.AddBlock(tx)
+		elapsed := time.Since(start)
+		fmt.Printf("⏰ 耗时: %v\n\n", elapsed)
 	}
 
-	// 6. 打印被篡改的区块信息
-	fmt.Println("\n====被篡改的区块详情====")
-	tamperedBlock := chain.Blocks[1]
-	fmt.Printf("存储的 Hash: %s\n", tamperedBlock.Hash)
-	fmt.Printf("实际计算的 Hash: %s\n", tamperedBlock.CalculateHash())
-	fmt.Printf("两个哈希是否匹配：%v\n", tamperedBlock.Hash == tamperedBlock.CalculateHash())
+	// 最终验证
+	fmt.Println("==== 最终验证 ====")
+	if chain.IsChainValid() {
+		fmt.Println("✅ 区块链验证通过，所有区块均有效且满足难度要求！")
+	} else {
+		fmt.Println("❌ 区块链验证失败！")
+	}
 }
