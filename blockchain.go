@@ -77,3 +77,15 @@ func (bc *Blockchain) GetBlocks() []*Block {
 	copy(blocksCopy, bc.Blocks)
 	return blocksCopy
 }
+
+// 获取单个区块
+func (bc *Blockchain) GetBlock(index int) *Block {
+	bc.mu.Lock()
+	defer bc.mu.Unlock()
+
+	if index < 0 || index >= len(bc.Blocks) {
+		return nil
+	}
+
+	return bc.Blocks[index]
+}

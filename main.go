@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	// "time"
-	// "log"
+	"log"
 	"net/http"
 )
 
@@ -124,21 +124,23 @@ func NetDemo() {
 	// 验证链
 	http.HandleFunc("/valid", handleIsValid)
 
+	// 黑客攻击
+	http.HandleFunc("/tamper", handleTamper)
+
+	// 3. 启动服务器
 	// 3. 启动服务器
 	port := ":8080"
-	fmt.Printf("🚀 服务器启动中... 访问 http://localhost%s/blockchain\n", port)
-
-	// 启动HTTP服务器
-	// 注意：log.Fatal会在服务器出错时终止程序
-	// 修改后：添加更清晰的错误提示
-	fmt.Printf("🚀 尝试在 %s 启动服务器...\n", port)
-	err := http.ListenAndServe(port, nil)
-	if err != nil {
-		fmt.Printf("❌ 服务器启动失败: %v\n", err)
-		fmt.Println("💡 可能的原因：")
-		fmt.Println("   1. 端口 8080 被其他程序占用")
-		fmt.Println("   2. 没有权限绑定该端口")
-		fmt.Println("   3. 防火墙阻止")
-		return
-	}
+	fmt.Println("===========================================")
+	fmt.Println("🚀 区块链服务器启动成功！")
+	fmt.Println("===========================================")
+	fmt.Println("📡 API 接口列表：")
+	fmt.Println("   GET  /blockchain  - 查看完整区块链")
+	fmt.Println("   POST /mine        - 挖掘新区块")
+	fmt.Println("   GET  /valid       - 验证区块链完整性")
+	fmt.Println("   POST /tamper      - 🚨 模拟黑客篡改数据")
+	fmt.Println("===========================================")
+	fmt.Printf("🌐 访问 http://localhost%s/blockchain\n", port)
+	fmt.Println("===========================================")
+	
+	log.Fatal(http.ListenAndServe(port, nil))
 }
