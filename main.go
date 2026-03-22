@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
-	"time"
+	// "time"
+	// "log"
+	"net/http"
 )
 
 func main() {
@@ -77,30 +79,66 @@ func main() {
 	// fmt.Printf("实际计算的 Hash: %s\n", tamperedBlock.CalculateHash())
 	// fmt.Printf("两个哈希是否匹配：%v\n", tamperedBlock.Hash == tamperedBlock.CalculateHash())
 
-	fmt.Println("🚀 启动 Go-Chain 挖矿演示...")
+	// fmt.Println("🚀 启动 Go-Chain 挖矿演示...")
 
-	// 1. 创建区块链 (会自动挖创世区块)
-	chain := NewBlockchain()
+	// // 1. 创建区块链 (会自动挖创世区块)
+	// chain := NewBlockchain()
 
-	// 2. 添加区块并观察耗时
-	transactions := []string{
-		"A 转账 10 BTC 给 B",
-		"B 转账 5 BTC 给 C",
-		"C 转账 3 BTC 给 D",
-	}
+	// // 2. 添加区块并观察耗时
+	// transactions := []string{
+	// 	"A 转账 10 BTC 给 B",
+	// 	"B 转账 5 BTC 给 C",
+	// 	"C 转账 3 BTC 给 D",
+	// }
 
-	for _, tx := range transactions {
-		start := time.Now()
-		chain.AddBlock(tx)
-		elapsed := time.Since(start)
-		fmt.Printf("⏰ 耗时: %v\n\n", elapsed)
-	}
+	// for _, tx := range transactions {
+	// 	start := time.Now()
+	// 	chain.AddBlock(tx)
+	// 	elapsed := time.Since(start)
+	// 	fmt.Printf("⏰ 耗时: %v\n\n", elapsed)
+	// }
 
-	// 最终验证
-	fmt.Println("==== 最终验证 ====")
-	if chain.IsChainValid() {
-		fmt.Println("✅ 区块链验证通过，所有区块均有效且满足难度要求！")
-	} else {
-		fmt.Println("❌ 区块链验证失败！")
+	// // 最终验证
+	// fmt.Println("==== 最终验证 ====")
+	// if chain.IsChainValid() {
+	// 	fmt.Println("✅ 区块链验证通过，所有区块均有效且满足难度要求！")
+	// } else {
+	// 	fmt.Println("❌ 区块链验证失败！")
+	// }
+
+	NetDemo()
+}
+
+func NetDemo() {
+	// 1. 初始化区块链
+	BlockChain = NewBlockchain()
+	fmt.Println("✅ 区块链初始化完成，创世区块已挖掘")
+
+	// 2. 注册路由
+	// 查看整个链
+	http.HandleFunc("/blockchain", handleGetBlockchain)
+
+	// 挖矿/添加区块
+	http.HandleFunc("/mine", handleMineBlock)
+
+	// 验证链
+	http.HandleFunc("/valid", handleIsValid)
+
+	// 3. 启动服务器
+	port := ":8080"
+	fmt.Printf("🚀 服务器启动中... 访问 http://localhost%s/blockchain\n", port)
+
+	// 启动HTTP服务器
+	// 注意：log.Fatal会在服务器出错时终止程序
+	// 修改后：添加更清晰的错误提示
+	fmt.Printf("🚀 尝试在 %s 启动服务器...\n", port)
+	err := http.ListenAndServe(port, nil)
+	if err != nil {
+		fmt.Printf("❌ 服务器启动失败: %v\n", err)
+		fmt.Println("💡 可能的原因：")
+		fmt.Println("   1. 端口 8080 被其他程序占用")
+		fmt.Println("   2. 没有权限绑定该端口")
+		fmt.Println("   3. 防火墙阻止")
+		return
 	}
 }

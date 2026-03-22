@@ -2,11 +2,13 @@ package main
 
 import (
 	"fmt"
+	"sync"
 )
 
 // Blockchain 代表整个区块链
 type Blockchain struct {
 	Blocks []*Block
+	mu		sync.Mutex	// 新增：互斥锁，保护并发安全
 }
 
 // 定义挖矿难度，数字越大越慢
@@ -23,8 +25,13 @@ func NewBlockchain() *Blockchain {
 	}
 }
 
-// 添加新区块到链上
+// 添加新区块到链上 - 线程安全
 func (bc *Blockchain) AddBlock(data string) {
+
+	// 上锁，确保同一时间只有一个协程能修改区块链
+	bc.mu.Lock()
+	defer bc.mu.Unlock()
+
 	prevBlock := bc.Blocks[len(bc.Blocks)-1]
 	newBlock := NewBlock(prevBlock.Index+1, data, prevBlock.Hash)
 
@@ -39,6 +46,9 @@ func (bc *Blockchain) AddBlock(data string) {
 // IsChainValid 验证整个区块链是否有效
 // 返回true表示链条完整未被篡改
 func (bc *Blockchain) IsChainValid() bool {
+	bc.mu.Lock()
+	defer bc.mu.Unlock()
+
 	for i := 1; i < len(bc.Blocks); i++ {
 		currentBlock := bc.Blocks[i]
 		prevBlock := bc.Blocks[i-1]
@@ -55,4 +65,15 @@ func (bc *Blockchain) IsChainValid() bool {
 	}
 
 	return true
+}
+
+// 获取所有区块的副本（防止外部直接修改）
+func (bc *Blockchain) GetBlocks() []*Block {
+	bc.mu.Lock()
+	defer bc.mu.Unlock()
+
+	// 返回副本
+	blocksCopy := make([]*Block, len(bc.Blocks))
+	copy(blocksCopy, bc.Blocks)
+	return blocksCopy
 }
