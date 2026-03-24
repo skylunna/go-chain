@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 )
 
 // 全局区块链实例（在main中初始化）
@@ -116,11 +117,19 @@ func handleMineBlock(w http.ResponseWriter, r *http.Request) {
 	data := "New Transaction"
 	// 这里简化处理，实际应该读取 r.Body
 
-	BlockChain.AddBlock(data)
+	// 添加区块，返回新挖出的区块
+	newBlock := BlockChain.AddBlock(data)
+
+	// 广播给其他节点
+	// 检查 P2P 管理器是否已初始化
+	if P2P != nil {
+		go P2P.BroadcastBlock(newBlock) // 使用 goroutine 避免阻塞请求
+	}
 
 	response := BlockResponse{
 		Success: true,
-		Message: "区块挖掘成功",
+		Message: "区块挖掘成功并广播",
+		Data:    BlockToDTO(newBlock),
 	}
 
 	json.NewEncoder(w).Encode(response)
@@ -205,52 +214,51 @@ func handleTamper(w http.ResponseWriter, r *http.Request) {
 }
 
 // 处理POST/block/receive请求 - 接收其他节点的区块
+// api.go
+
 func handleReceiveBlock(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var dto BlockDTO
-	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
-		response := BlockResponse{
-			Success: false,
-			Message: "无效的区块数据",
-		}
-		json.NewEncoder(w).Encode(response)
+	// 添加调试日志
+	fmt.Printf("📥 [%s] 收到接收区块请求: %s %s\n",
+		time.Now().Format("15:04:05"), r.Method, r.URL.Path)
+
+	var newBlock Block
+	if err := json.NewDecoder(r.Body).Decode(&newBlock); err != nil {
+		fmt.Printf("❌ 解析区块数据失败: %v\n", err)
+		json.NewEncoder(w).Encode(BlockResponse{Success: false, Message: "无效的区块数据"})
 		return
 	}
 
-	newBlock := DTOToBlock(dto)
+	fmt.Printf("📥 收到区块 %d, PrevHash: %s\n", newBlock.Index, newBlock.PrevHash[:10]+"...")
 
 	// 验证区块
-	BlockChain.mu.Lock()
-	defer BlockChain.mu.Unlock()
-
 	lastBlock := BlockChain.Blocks[len(BlockChain.Blocks)-1]
 
 	if newBlock.Index != lastBlock.Index+1 {
-		json.NewEncoder(w).Encode(BlockResponse{
-			Success: false,
-			Message: "区块索引不连续",
-		})
+		fmt.Printf("❌ 区块索引不连续: 期望 %d, 收到 %d\n", lastBlock.Index+1, newBlock.Index)
+		json.NewEncoder(w).Encode(BlockResponse{Success: false, Message: "区块索引不连续"})
 		return
 	}
 
 	if newBlock.PrevHash != lastBlock.Hash {
-		json.NewEncoder(w).Encode(BlockResponse{
-			Success: false,
-			Message: "前哈希不匹配",
-		})
+		fmt.Printf("❌ PrevHash 不匹配: 期望 %s, 收到 %s\n", lastBlock.Hash[:10]+"...", newBlock.PrevHash[:10]+"...")
+		json.NewEncoder(w).Encode(BlockResponse{Success: false, Message: "前哈希不匹配"})
 		return
 	}
 
 	if newBlock.Hash != newBlock.CalculateHash() {
-		json.NewEncoder(w).Encode(BlockResponse{
-			Success: false,
-			Message: "区块哈希验证失败",
-		})
+		fmt.Printf("❌ 区块哈希验证失败\n")
+		json.NewEncoder(w).Encode(BlockResponse{Success: false, Message: "区块哈希验证失败"})
 		return
 	}
 
-	BlockChain.Blocks = append(BlockChain.Blocks, newBlock)
+	// 添加到链上
+	BlockChain.Blocks = append(BlockChain.Blocks, &newBlock)
+
+	// 成功日志
+	fmt.Printf("✅ [%s] 区块 %d 接收并验证成功！当前链长度: %d\n",
+		time.Now().Format("15:04:05"), newBlock.Index, len(BlockChain.Blocks))
 
 	json.NewEncoder(w).Encode(BlockResponse{
 		Success: true,

@@ -8,25 +8,43 @@ import (
 // Blockchain 代表整个区块链
 type Blockchain struct {
 	Blocks []*Block
-	mu		sync.Mutex	// 新增：互斥锁，保护并发安全
+	mu     sync.Mutex // 新增：互斥锁，保护并发安全
 }
 
 // 定义挖矿难度，数字越大越慢
 const Difficulty = 2
 
+// 创建固定的创世区块
+// 所有节点调用此函数都会生成完全相同的区块
+func CreateGenesisBlock() *Block {
+	block := &Block{
+		Index:     0,
+		Timestamp: "2026-03-04 00:00:00",
+		Data:      "Genesis Block - Go-Chain v1.0",
+		PrevHash:  "",
+		Nonce:     0,
+	}
+
+	// 挖矿得到固定哈希
+	// 难度固定，否则不同电脑挖出的Nonce不同，但哈希结果相同
+	block.MineBlock(Difficulty)
+	return block
+}
+
 // NewBlockchain 创建一个新的区块链，包含创世区块
 func NewBlockchain() *Blockchain {
 	// 创世区块也需要挖矿
-	genesis := NewBlock(0, "Genesis Block", "")
-	genesis.MineBlock(Difficulty)
+	genesis := CreateGenesisBlock()
+	// genesis.MineBlock(Difficulty)
+	fmt.Printf("✅ 创世区块已加载: Hash=%s\n", genesis.Hash[:16]+"...")
 
-	return &Blockchain {
+	return &Blockchain{
 		Blocks: []*Block{genesis},
 	}
 }
 
 // 添加新区块到链上 - 线程安全
-func (bc *Blockchain) AddBlock(data string) {
+func (bc *Blockchain) AddBlock(data string) *Block {
 
 	// 上锁，确保同一时间只有一个协程能修改区块链
 	bc.mu.Lock()
@@ -41,6 +59,8 @@ func (bc *Blockchain) AddBlock(data string) {
 
 	bc.Blocks = append(bc.Blocks, newBlock)
 	fmt.Printf("区块 %d 挖掘成功! Hash: %s\n", newBlock.Index, newBlock.Hash[:10]+"...")
+
+	return newBlock
 }
 
 // IsChainValid 验证整个区块链是否有效

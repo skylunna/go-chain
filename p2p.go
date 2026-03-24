@@ -39,8 +39,7 @@ func (p *P2PManager) sendBlockToPeer(peer string, block *Block) {
 	再把字符串转成 []byte 字节类型 (网络传输必须用字节)
 						-> []byte(`{"index":1,"timestamp":123456,"data":"转账100"}`)
 	*/
-	dto := BlockToDTO(block)
-	data, _ := json.Marshal(dto)
+	data, _ := json.Marshal(block)
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(data))
 	if err != nil {
 		fmt.Printf("❌ 发送失败到 %s: %v\n", peer, err)
@@ -48,7 +47,21 @@ func (p *P2PManager) sendBlockToPeer(peer string, block *Block) {
 	}
 	defer resp.Body.Close()
 
-	fmt.Printf("✅ 区块 %d 已发送到 %s\n", block.Index, peer)
+	// 检查响应状态码
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		fmt.Printf("❌ 节点 %s 返回错误 [%d]: %s\n", peer, resp.StatusCode, string(body))
+		return
+	}
+
+	// 解析响应体确认业务逻辑成功
+	var apiResp BlockResponse
+	json.NewDecoder(resp.Body).Decode(&apiResp)
+	if apiResp.Success {
+		fmt.Printf("✅ 区块 %d 已被 %s 确认接收\n", block.Index, peer)
+	} else {
+		fmt.Printf("⚠️  区块 %d 被 %s 拒绝: %s\n", block.Index, peer, apiResp.Message)
+	}
 }
 
 // SyncWithPeers 启动时从其他节点同步区块链
