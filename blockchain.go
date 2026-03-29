@@ -1,14 +1,76 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"sync"
+
+	"github.com/syndtr/goleveldb/leveldb"
+	"github.com/syndtr/goleveldb/leveldb/util"
 )
 
 // Blockchain 代表整个区块链
 type Blockchain struct {
-	Blocks []*Block
+	db 		*leveldb.DB	// 数据库引用
 	mu     sync.Mutex // 新增：互斥锁，保护并发安全
+}
+
+// InitBlockchain 初始化区块链 (打开数据库或创建创世区块)
+func InitBlockchain(dbPath string) (*Blockchain, error) {	// 多返回值
+	// 1. 打开数据库
+	db, err := leveldb.OpenFile(dbPath, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	bc := &Blockchain{
+		db: db
+	}
+
+	// 2. 检查数据库是否为空
+	hasData, _ := db.Has([]byte("chain_tip", nil))
+	if !hasData {
+		// 数据库为空，创建创世区块
+		fmt.Println("📦 数据库为空，初始化创世区块...")
+		genesis := NewBlock(0, "Genesis Block", "")
+		genesis.MineBlock(Difficulty)
+		err = bc.saveBlock(genesis)
+
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		fmt.Println("📦 检测到已有数据，加载区块链...")
+	}
+
+	return bc, nil
+}
+
+// 将区块保存到数据库
+func (bc *Blockchain) saveBlock(block *Block) error {
+
+	batch := new(leveldb.Batch)
+
+	// 1. 序列化区块
+	data, err := json.Marshal(block)
+	if err != nil {
+		return err
+	}
+
+	// 2. 保存区块数据 key: "block:1"
+	blockKey := fmt.Sprintf("block:%d", block.Index)
+	batch.Put([]byte(blockKey), data)
+
+	// 3. 更新链顶高度 key: "chain_tip"
+	batch.Put([]byte("chain_tip", []byte(fmt.Sprintf("%d", block.Index))))
+
+	// 4. 写入数据库
+	return bc.db.Write(batch, nil)
+}
+
+// 根据高度获取区块
+func (bc *Blockchain) GetBlock(height int) (*Block, error) {
+	key := fmt.Sprintf("block:%d", height)
 }
 
 // 定义挖矿难度，数字越大越慢
