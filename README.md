@@ -1,21 +1,44 @@
-# go-chain
-go-chain
+# Go-Chain 🚀
 
+一个使用 Go 语言实现的去中心化区块链原型，包含工作量证明 (PoW)、P2P 网络通信和防篡改验证机制。
 
-## 🔒 安全演示
+## ✨ 核心特性
 
-### 模拟黑客攻击
+- 🔒 **防篡改**：基于 SHA256 哈希链，任何数据修改都会导致验证失败
+- ⛏️ **工作量证明 (PoW)**：模拟比特币挖矿机制，可调整难度
+- 🌐 **P2P 网络**：支持多节点部署，自动同步最长链，实时广播新区块
+- 🛡️ **安全演示**：内置黑客攻击模拟接口，直观展示区块链安全性
+- 🐳 **Docker 支持**：一键启动多节点集群
 
-1. 启动服务器后，先挖掘几个区块
-2. 调用 `/tamper` 接口篡改数据
-3. 调用 `/valid` 接口验证，会检测到篡改
+## 🚀 快速开始
 
+### 本地运行
 ```bash
-# 篡改区块 1 的数据
-curl -X POST http://localhost:8080/tamper \
-  -H "Content-Type: application/json" \
-  -d '{"index": 1, "data": "HACKED!"}'
+go mod tidy
+go run .
+```
 
-# 验证区块链
+### Docker 启动多节点集群
+```bash
+docker-compose up
+```
+
+### API 接口
+GET     /blockchain   获取完整区块链数据
+POST    /mine         挖掘新区块
+GET     /valid        验证链条完整性
+POST    /tamper       模拟黑客篡改数据
+
+
+### 安全演示
+尝试篡改数据并观察验证失败:
+```bash
+curl -X POST http://localhost:8080/tamper -d '{"index":1, "data":"Hacked"}'
 curl http://localhost:8080/valid
-# 输出：区块链无效！检测到篡改！
+```
+
+### 技术栈
+- Go 1.21+
+- HTTP/JSON API
+- SHA256 Cryptography
+- Goroutine Concurrency

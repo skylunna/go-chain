@@ -1,0 +1,34 @@
+version: "3"
+services:
+  node1:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - PEERS=node2:8081,node3:8082
+    networks:
+      - chain-net
+
+  node2:
+    build: .
+    ports:
+      - "8081:8081"
+    environment:
+      - PORT=8081
+      - PEERS=node1:8080,node3:8082
+    networks:
+      - chain-net
+
+  node3:
+    build: .
+    ports:
+      - "8082:8082"
+    environment:
+      - PORT=8082
+      - PEERS=node1:8080,node2:8081
+    networks:
+      - chain-net
+
+networks:
+  chain-net:
