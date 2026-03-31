@@ -1,2 +1,4 @@
 go.sum
 bin/
+chain_data
+data
