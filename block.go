@@ -3,20 +3,20 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"strconv"
 	"time"
-	"fmt"
 )
 
 // Block代表区块链中的一个区块
 type Block struct {
-	Index		int 	// 区块的高度
-	Timestamp	string	// 时间戳
-	Data		string	// 区块数据
-	PrevHash	string	// 前一个区块的哈希
-	Hash		string	// 当前区块的哈希
+	Index     int    // 区块的高度
+	Timestamp string // 时间戳
+	Data      string // 区块数据
+	PrevHash  string // 前一个区块的哈希
+	Hash      string // 当前区块的哈希
 
-	Nonce		int		// 用于挖矿的随机数
+	Nonce int // 用于挖矿的随机数
 }
 
 // 计算区块的哈希值
@@ -25,10 +25,10 @@ func (b *Block) CalculateHash() string {
 	// 简单起见，我们将所有字段拼接成字符串
 	// 在实际生产中，通常会将结构体序列化为JSON后再哈希，以保证一致性
 	// Integer to ASCII
-	record := string(b.Index) + b.Timestamp + b.Data + b.PrevHash + strconv.Itoa(b.Nonce)
+	record := strconv.Itoa(b.Index) + b.Timestamp + b.Data + b.PrevHash + strconv.Itoa(b.Nonce)
 	h := sha256.New()
 	h.Write([]byte(record))
-	hashed := h.Sum(nil)
+	hashed := h.Sum(nil) // 不追加其余切片值
 
 	return hex.EncodeToString(hashed)
 }
@@ -42,6 +42,7 @@ func (b *Block) MineBlock(difficulty int) {
 		target += "0"
 	}
 
+	// target = "00"
 	// 不断尝试不同的 Nonce, 直到哈希值满足难度要求
 	for {
 		hash := b.CalculateHash()
@@ -53,17 +54,17 @@ func (b *Block) MineBlock(difficulty int) {
 		}
 		b.Nonce++
 	}
- }
+}
 
 // NewBlock 创建一个新区块
 // 创建后不再直接计算哈希，而是需要挖矿
 func NewBlock(index int, data string, prevHash string) *Block {
-	block := &Block {
-		Index: index,
+	block := &Block{
+		Index:     index,
 		Timestamp: time.Now().String(),
-		Data: data,
-		PrevHash: prevHash,
-		Nonce: 0,
+		Data:      data,
+		PrevHash:  prevHash,
+		Nonce:     0,
 	}
 
 	// 创建后立即计算哈希

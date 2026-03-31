@@ -2,3 +2,4 @@ go.sum
 bin/
 chain_data
 data
+test_go

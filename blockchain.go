@@ -8,6 +8,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 )
 
+// 挖矿难度
 const Difficulty = 2
 
 // Blockchain 现在包含数据库引用
@@ -19,11 +20,13 @@ type Blockchain struct {
 // InitBlockchain 初始化区块链（打开数据库或创建创世块）
 func InitBlockchain(dbPath string) (*Blockchain, error) {
 	// 1. 打开数据库
-	db, err := leveldb.OpenFile(dbPath, nil)
+	db, err := leveldb.OpenFile(dbPath, nil) // nil 传默认配置
 	if err != nil {
 		return nil, err
 	}
 
+	// 创建 Blockchain 结构体实例，返回其指针
+	// 创建一条区块链实例，并且把已打开的数据库连接交给它管理 bc
 	bc := &Blockchain{db: db}
 
 	// 2. 检查数据库是否为空
@@ -46,6 +49,7 @@ func InitBlockchain(dbPath string) (*Blockchain, error) {
 
 // saveBlock 将区块保存到数据库
 func (bc *Blockchain) saveBlock(block *Block) error {
+	// 创建一个空的 LevelDB 批量操作对象（batch)
 	batch := new(leveldb.Batch)
 
 	// 1. 序列化区块
