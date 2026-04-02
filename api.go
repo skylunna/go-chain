@@ -173,7 +173,7 @@ func handleTamper(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// ✅ 修复 1: 获取最新高度来检查索引范围
+	//获取最新高度来检查索引范围
 	tip, err := BlockChain.GetTip()
 	if err != nil {
 		json.NewEncoder(w).Encode(BlockResponse{
@@ -184,7 +184,7 @@ func handleTamper(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查索引是否合法
-	if req.Index <= 0 || req.Index > tip { // ✅ 使用 tip 而不是 len(Blocks)
+	if req.Index <= 0 || req.Index > tip { // 使用 tip 而不是 len(Blocks)
 		json.NewEncoder(w).Encode(BlockResponse{
 			Success: false,
 			Message: fmt.Sprintf("无效的区块索引，有效范围：1-%d", tip),
@@ -201,7 +201,7 @@ func handleTamper(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// ✅ 修复 2: 从数据库获取区块
+	// 从数据库获取区块
 	block, err := BlockChain.GetBlock(req.Index)
 	if err != nil {
 		json.NewEncoder(w).Encode(BlockResponse{
@@ -216,20 +216,20 @@ func handleTamper(w http.ResponseWriter, r *http.Request) {
 	originalHash := block.Hash
 
 	// 🚨 执行篡改：直接修改内存中的对象，但不保存到数据库
-	// 注意：这只是演示用，实际黑客也无法直接改数据库
+	// 只是演示用，实际黑客也无法直接改数据库
 	// 我们模拟的是"如果数据被改了但哈希没变"的场景
-	block.Data = req.Data // ✅ 修改的是局部变量 block，不是直接改数据库
+	block.Data = req.Data // 修改的是局部变量 block，不是直接改数据库
 
-	// ✅ 修复 3: 使用 block 变量而不是 BlockChain.Blocks[i]
+	//  使用 block 变量而不是 BlockChain.Blocks[i]
 	response := BlockResponse{
 		Success: true,
 		Message: "⚠️  数据篡改模拟成功！但哈希值未更新，区块链已检测到异常！",
 		Data: map[string]interface{}{
 			"blockIndex":     req.Index,
 			"originalData":   originalData,
-			"tamperedData":   block.Data, // ✅ 使用 block.Data
+			"tamperedData":   block.Data, // 使用 block.Data
 			"storedHash":     originalHash,
-			"calculatedHash": block.CalculateHash(), // ✅ 使用 block.CalculateHash()
+			"calculatedHash": block.CalculateHash(), // 使用 block.CalculateHash()
 			"hashMatch":      originalHash == block.CalculateHash(),
 			"nextStep":       "请调用 /valid 接口验证区块链完整性",
 		},
@@ -248,7 +248,7 @@ func handleReceiveBlock(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	fmt.Printf("📥 [%s] 收到接收区块请求: %s %s\n",
-		time.Now().Format("15:04:05"), r.Method, r.URL.Path)
+		time.Now().Format("15:04:05"), r.Method, r.URL.Path) // 2006-01-02 15:04:05
 
 	var newBlock Block
 	if err := json.NewDecoder(r.Body).Decode(&newBlock); err != nil {
@@ -259,7 +259,7 @@ func handleReceiveBlock(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Printf("📥 收到区块 %d, PrevHash: %s\n", newBlock.Index, newBlock.PrevHash[:10]+"...")
 
-	// ✅ 修复 1: 从数据库获取最后一个区块
+	// 从数据库获取最后一个区块
 	tip, err := BlockChain.GetTip()
 	if err != nil {
 		json.NewEncoder(w).Encode(BlockResponse{Success: false, Message: "无法获取链高度"})
@@ -293,7 +293,7 @@ func handleReceiveBlock(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// ✅ 修复 2: 使用 saveBlock 保存到数据库，而不是追加到内存切片
+	// 使用 saveBlock 保存到数据库，而不是追加到内存切片
 	// 注意：这里直接调用 saveBlock，因为 AddBlock 会重新挖矿
 	// 接收广播的区块已经是挖好的，只需要验证后保存
 	err = BlockChain.AddReceivedBlock(&newBlock)

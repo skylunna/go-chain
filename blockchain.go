@@ -69,7 +69,7 @@ func (bc *Blockchain) saveBlock(block *Block) error {
 	return bc.db.Write(batch, nil)
 }
 
-// GetBlock 根据高度获取区块
+// GetBlock
 func (bc *Blockchain) GetBlock(height int) (*Block, error) {
 	key := fmt.Sprintf("block:%d", height)
 	data, err := bc.db.Get([]byte(key), nil)
@@ -196,6 +196,7 @@ func (bc *Blockchain) SyncChain(newChain []*Block) bool {
 	}
 
 	// 2. 如果新链不比本地长，不同步
+	// 最长链原则
 	if len(newChain) <= localTip+1 {
 		return false
 	}

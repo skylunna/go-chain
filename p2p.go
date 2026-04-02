@@ -40,7 +40,9 @@ func (p *P2PManager) sendBlockToPeer(peer string, block *Block) {
 						-> []byte(`{"index":1,"timestamp":123456,"data":"转账100"}`)
 	*/
 	data, _ := json.Marshal(block)
-	resp, err := http.Post(url, "application/json", bytes.NewBuffer(data))
+	// 包装成Http能发送的格式 (放进信封)
+	buffer := bytes.NewBuffer(data)
+	resp, err := http.Post(url, "application/json", buffer)
 	if err != nil {
 		fmt.Printf("❌ 发送失败到 %s: %v\n", peer, err)
 		return
@@ -101,7 +103,6 @@ func (p *P2PManager) SyncWithPeers() {
 	}
 }
 
-// 从单个节点获取区块链
 // 从单个节点获取区块链
 func (p *P2PManager) fetchChainFromPeer(peer string) []*Block {
 	url := "http://" + peer + "/blockchain"
