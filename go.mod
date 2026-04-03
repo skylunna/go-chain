@@ -1,4 +1,4 @@
-module github.com/glztl/go-chain
+module github.com/skylunna/go-chain
 
 go 1.25.0
 

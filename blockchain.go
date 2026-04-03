@@ -94,7 +94,7 @@ func (bc *Blockchain) GetTip() (int, error) {
 	return tip, nil
 }
 
-// AddBlock 添加新区块（持久化版本）
+// AddBlock 添加新区块（持久化版本）z
 func (bc *Blockchain) AddBlock(data string) (*Block, error) {
 	bc.mu.Lock()
 	defer bc.mu.Unlock()
